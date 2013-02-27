@@ -48,31 +48,18 @@ enum {BL= 0, BR=1, FL=2, FR=3};
 
 GrizzlyPlugin::GrizzlyPlugin()
 {
-  this->spinner_thread_ = new boost::thread( boost::bind( &GrizzlyPlugin::spin, this) );
-
-  wheel_speed_ = new float[2];
-  wheel_speed_[BL] = 0.0;
-  wheel_speed_[BR] = 0.0;
-  wheel_speed_[FL] = 0.0;
-  wheel_speed_[FR] = 0.0;
-
-  set_joints_[0] = false;
-  set_joints_[1] = false;
-  set_joints_[2] = false;
-  set_joints_[3] = false;
-  joints_[0].reset();
-  joints_[1].reset();
-  joints_[2].reset();
-  joints_[3].reset();
 }
 
 GrizzlyPlugin::~GrizzlyPlugin()
 {
-  rosnode_->shutdown();
-  this->spinner_thread_->join();
-  delete this->spinner_thread_;
-  delete [] wheel_speed_;
   delete rosnode_;
+  delete spinner_thread_;
+}
+
+void GrizzlyPlugin::FiniChild()
+{
+  rosnode_->shutdown();
+  spinner_thread_->join();
 }
     
 void GrizzlyPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf )
@@ -113,37 +100,17 @@ void GrizzlyPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf )
   if (_sdf->HasElement("torque"))
     torque_ = _sdf->GetElement("torque")->GetValueDouble();
 
-
   base_geom_name_ = "base_link";
   if (_sdf->HasElement("baseGeom"))
     base_geom_name_ = _sdf->GetElement("baseGeom")->GetValueString();
   base_geom_ = model_->GetChildCollision(base_geom_name_);
 
+
   //base_geom_->SetContactsEnabled(true);
 
   // Get the name of the parent model
   std::string modelName = _sdf->GetParent()->GetValueString("name");
-
-  // Listen to the update event. This event is broadcast every
-  // simulation iteration.
-  this->updateConnection = event::Events::ConnectWorldUpdateStart(
-      boost::bind(&GrizzlyPlugin::UpdateChild, this));
   gzdbg << "plugin model name: " << modelName << "\n";
-
-  if (!ros::isInitialized())
-  {
-    int argc = 0;
-    char** argv = NULL;
-    ros::init(argc, argv, "gazebo_grizzly", ros::init_options::NoSigintHandler|ros::init_options::AnonymousName);
-  }
-
-  rosnode_ = new ros::NodeHandle( node_namespace_ );
-
-  cmd_vel_sub_ = rosnode_->subscribe("cmd_vel", 1, &GrizzlyPlugin::OnCmdVel, this );
-
-  odom_pub_ = rosnode_->advertise<nav_msgs::Odometry>("odom", 1);
-
-  joint_state_pub_ = rosnode_->advertise<sensor_msgs::JointState>("joint_states", 1);
 
   js_.name.push_back( bl_joint_name_ );
   js_.position.push_back(0);
@@ -168,9 +135,17 @@ void GrizzlyPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf )
   prev_update_time_ = 0;
   last_cmd_vel_time_ = 0;
 
+  wheel_speed_[BL] = 0.0;
+  wheel_speed_[BR] = 0.0;
+  wheel_speed_[FL] = 0.0;
+  wheel_speed_[FR] = 0.0;
+
+  set_joints_[0] = false;
+  set_joints_[1] = false;
+  set_joints_[2] = false;
+  set_joints_[3] = false;
 
   //TODO: fix this
-
   joints_[BL] = model_->GetJoint(bl_joint_name_);
   joints_[BR] = model_->GetJoint(br_joint_name_);
   joints_[FL] = model_->GetJoint(fl_joint_name_);
@@ -181,11 +156,27 @@ void GrizzlyPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf )
   if (joints_[FL]) set_joints_[FL] = true;
   if (joints_[FR]) set_joints_[FR] = true;
 
+
   //initialize time and odometry position
   prev_update_time_ = last_cmd_vel_time_ = this->world_->GetSimTime();
   odom_pose_[0] = 0.0;
   odom_pose_[1] = 0.0;
   odom_pose_[2] = 0.0;
+
+  // Initialize the ROS node and subscribe to cmd_vel
+  int argc = 0;
+  char** argv = NULL;
+  ros::init(argc, argv, "gazebo_grizzly", ros::init_options::NoSigintHandler|ros::init_options::AnonymousName);
+  rosnode_ = new ros::NodeHandle( node_namespace_ );
+
+  cmd_vel_sub_ = rosnode_->subscribe("cmd_vel", 1, &GrizzlyPlugin::OnCmdVel, this );
+  odom_pub_ = rosnode_->advertise<nav_msgs::Odometry>("odom", 1);
+  joint_state_pub_ = rosnode_->advertise<sensor_msgs::JointState>("joint_states", 1);
+
+  // Listen to the update event. This event is broadcast every
+  // simulation iteration.
+  this->spinner_thread_ = new boost::thread( boost::bind( &GrizzlyPlugin::spin, this) );
+  this->updateConnection = event::Events::ConnectWorldUpdateStart(boost::bind(&GrizzlyPlugin::UpdateChild, this));
 }
 
 
@@ -245,7 +236,6 @@ void GrizzlyPlugin::UpdateChild()
   odom_vel_[0] = dr / step_time.Double();
   odom_vel_[1] = 0.0;
   odom_vel_[2] = da / step_time.Double();
-
 
   if (set_joints_[BL])
   {

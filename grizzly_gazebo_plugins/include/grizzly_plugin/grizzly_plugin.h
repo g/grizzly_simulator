@@ -16,6 +16,10 @@
 #include <tf/transform_broadcaster.h>
 #include <ros/ros.h>
 
+// Custom Callback Queue
+#include <ros/callback_queue.h>
+#include <ros/advertise_options.h>
+
 
 /*
  * Desc: Gazebo 1.x plugin for a Clearpath Robotics Husky A200
@@ -30,10 +34,11 @@ namespace gazebo
     public: 
       GrizzlyPlugin();
       virtual ~GrizzlyPlugin();
-          
       virtual void Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf );
-
+      
+    protected: 
       virtual void UpdateChild();
+      virtual void FiniChild();
   
     private:
 
@@ -71,7 +76,7 @@ namespace gazebo
       sensors::SensorPtr parent_sensor_;
 
       /// Speeds of the wheels
-      float *wheel_speed_;
+      float wheel_speed_[4];
 
       // Simulation time of the last update
       common::Time prev_update_time_;
