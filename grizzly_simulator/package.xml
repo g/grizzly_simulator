@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package>
+  <name>grizzly_simulator</name>
+  <version>0.0.3</version>
+  <description>The grizzly_simulator package</description>
+
+  <maintainer email="yanma@clearpathrobotics.com">Yan Ma</maintainer>
+
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <run_depend>grizzly_gazebo</run_depend>
+  <run_depend>grizzly_gazebo_plugins</run_depend>
+
+  <export><metapackage/></export>
+</package>
