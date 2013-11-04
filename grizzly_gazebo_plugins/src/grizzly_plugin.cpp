@@ -69,47 +69,47 @@ void GrizzlyPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf )
 
   this->node_namespace_ = "";
   if (_sdf->HasElement("robotNamespace"))
-    this->node_namespace_ = _sdf->GetElement("robotNamespace")->GetValueString() + "/";
+    this->node_namespace_ = _sdf->GetElement("robotNamespace")->Get<std::string>() + "/";
 
 
   bl_joint_name_ = "backLeftJoint";
   if (_sdf->HasElement("backLeftJoint"))
-    bl_joint_name_ = _sdf->GetElement("backLeftJoint")->GetValueString();
+    bl_joint_name_ = _sdf->GetElement("backLeftJoint")->Get<std::string>();
 
   br_joint_name_ = "backRightJoint";
   if (_sdf->HasElement("backRightJoint"))
-    br_joint_name_ = _sdf->GetElement("backRightJoint")->GetValueString();
+    br_joint_name_ = _sdf->GetElement("backRightJoint")->Get<std::string>();
 
   fl_joint_name_ = "frontLeftJoint";
   if (_sdf->HasElement("frontLeftJoint"))
-    fl_joint_name_ = _sdf->GetElement("frontLeftJoint")->GetValueString();
+    fl_joint_name_ = _sdf->GetElement("frontLeftJoint")->Get<std::string>();
 
   fr_joint_name_ = "frontRightJoint";
   if (_sdf->HasElement("frontRightJoint"))
-    fr_joint_name_ = _sdf->GetElement("frontRightJoint")->GetValueString();
+    fr_joint_name_ = _sdf->GetElement("frontRightJoint")->Get<std::string>();
 
   wheel_sep_ = 0.55;
   if (_sdf->HasElement("wheelSeparation"))
-    wheel_sep_ = _sdf->GetElement("wheelSeparation")->GetValueDouble();
+    wheel_sep_ = _sdf->GetElement("wheelSeparation")->Get<double>();
 
   wheel_diam_ = 0.30;
   if (_sdf->HasElement("wheelDiameter"))
-    wheel_diam_ = _sdf->GetElement("wheelDiameter")->GetValueDouble();
+    wheel_diam_ = _sdf->GetElement("wheelDiameter")->Get<double>();
 
   torque_ = 15.0;
   if (_sdf->HasElement("torque"))
-    torque_ = _sdf->GetElement("torque")->GetValueDouble();
+    torque_ = _sdf->GetElement("torque")->Get<double>();
 
   base_geom_name_ = "base_link";
   if (_sdf->HasElement("baseGeom"))
-    base_geom_name_ = _sdf->GetElement("baseGeom")->GetValueString();
+    base_geom_name_ = _sdf->GetElement("baseGeom")->Get<std::string>();
   base_geom_ = model_->GetChildCollision(base_geom_name_);
 
 
   //base_geom_->SetContactsEnabled(true);
 
   // Get the name of the parent model
-  std::string modelName = _sdf->GetParent()->GetValueString("name");
+  std::string modelName = _sdf->GetParent()->Get<std::string>("name");
   gzdbg << "plugin model name: " << modelName << "\n";
 
   js_.name.push_back( bl_joint_name_ );
@@ -267,8 +267,8 @@ void GrizzlyPlugin::UpdateChild()
   odom.pose.pose.position.y = odom_pose_[1];
   odom.pose.pose.position.z = 0;
 
-  btQuaternion qt;
-  qt.setEuler(0,0,odom_pose_[2]);
+  tf::Quaternion qt;
+  qt.setRPY(0,0,odom_pose_[2]);
 
   odom.pose.pose.orientation.x = qt.getX();
   odom.pose.pose.orientation.y = qt.getY();
@@ -299,25 +299,25 @@ void GrizzlyPlugin::UpdateChild()
   js_.header.stamp.nsec = time_now.nsec;
   if (this->set_joints_[BL])
   {
-    js_.position[0] = joints_[BL]->GetAngle(0).GetAsRadian();
+    js_.position[0] = joints_[BL]->GetAngle(0).Radian();
     js_.velocity[0] = joints_[BL]->GetVelocity(0);
   }
 
   if (this->set_joints_[BR])
   {
-    js_.position[1] = joints_[BR]->GetAngle(0).GetAsRadian();
+    js_.position[1] = joints_[BR]->GetAngle(0).Radian();
     js_.velocity[1] = joints_[BR]->GetVelocity(0);
   }
 
   if (this->set_joints_[FL])
   {
-    js_.position[2] = joints_[FL]->GetAngle(0).GetAsRadian();
+    js_.position[2] = joints_[FL]->GetAngle(0).Radian();
     js_.velocity[2] = joints_[FL]->GetVelocity(0);
   }
 
   if (this->set_joints_[FR])
   {
-    js_.position[3] = joints_[FR]->GetAngle(0).GetAsRadian();
+    js_.position[3] = joints_[FR]->GetAngle(0).Radian();
     js_.velocity[3] = joints_[FR]->GetVelocity(0);
   }
 
