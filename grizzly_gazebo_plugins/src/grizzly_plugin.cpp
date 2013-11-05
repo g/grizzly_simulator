@@ -44,7 +44,7 @@
 
 using namespace gazebo;
 
-enum {BL= 0, BR=1, FL=2, FR=3};
+enum {BL= 0, BR=1, FL=2, FR=3, FA=4};
 
 GrizzlyPlugin::GrizzlyPlugin()
 {
@@ -87,6 +87,10 @@ void GrizzlyPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf )
   fr_joint_name_ = "frontRightJoint";
   if (_sdf->HasElement("frontRightJoint"))
     fr_joint_name_ = _sdf->GetElement("frontRightJoint")->Get<std::string>();
+
+  fa_joint_name_ = "frontAxelJoint";
+  if (_sdf->HasElement("frontAxelJoint"))
+    fa_joint_name_ = _sdf->GetElement("frontAxelJoint")->Get<std::string>();
 
   wheel_sep_ = 0.55;
   if (_sdf->HasElement("wheelSeparation"))
@@ -132,6 +136,16 @@ void GrizzlyPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf )
   js_.velocity.push_back(0);
   js_.effort.push_back(0);
 
+  js_.name.push_back( fr_joint_name_ );
+  js_.position.push_back(0);
+  js_.velocity.push_back(0);
+  js_.effort.push_back(0);
+
+  js_.name.push_back( fa_joint_name_ );
+  js_.position.push_back(0);
+  js_.velocity.push_back(0);
+  js_.effort.push_back(0);
+
   prev_update_time_ = 0;
   last_cmd_vel_time_ = 0;
 
@@ -144,17 +158,21 @@ void GrizzlyPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf )
   set_joints_[1] = false;
   set_joints_[2] = false;
   set_joints_[3] = false;
+  set_joints_[4] = false;
 
   //TODO: fix this
   joints_[BL] = model_->GetJoint(bl_joint_name_);
   joints_[BR] = model_->GetJoint(br_joint_name_);
   joints_[FL] = model_->GetJoint(fl_joint_name_);
   joints_[FR] = model_->GetJoint(fr_joint_name_);
+  joints_[FR] = model_->GetJoint(fa_joint_name_);
 
   if (joints_[BL]) set_joints_[BL] = true;
   if (joints_[BR]) set_joints_[BR] = true;
   if (joints_[FL]) set_joints_[FL] = true;
   if (joints_[FR]) set_joints_[FR] = true;
+  if (joints_[FA]) set_joints_[FA] = true;
+
 
 
   //initialize time and odometry position
@@ -176,7 +194,7 @@ void GrizzlyPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf )
   // Listen to the update event. This event is broadcast every
   // simulation iteration.
   this->spinner_thread_ = new boost::thread( boost::bind( &GrizzlyPlugin::spin, this) );
-  this->updateConnection = event::Events::ConnectWorldUpdateStart(boost::bind(&GrizzlyPlugin::UpdateChild, this));
+  this->updateConnection = event::Events::ConnectWorldUpdateBegin(boost::bind(&GrizzlyPlugin::UpdateChild, this));
 }
 
 
@@ -319,6 +337,12 @@ void GrizzlyPlugin::UpdateChild()
   {
     js_.position[3] = joints_[FR]->GetAngle(0).Radian();
     js_.velocity[3] = joints_[FR]->GetVelocity(0);
+  }
+
+  if (this->set_joints_[FA])
+  {
+    js_.position[4] = joints_[FA]->GetAngle(0).Radian();
+    js_.velocity[4] = joints_[FA]->GetVelocity(0);
   }
 
   joint_state_pub_.publish( js_ );

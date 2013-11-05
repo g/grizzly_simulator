@@ -52,6 +52,7 @@ namespace gazebo
       std::string br_joint_name_;
       std::string fl_joint_name_;
       std::string fr_joint_name_;
+      std::string fa_joint_name_;
       std::string base_geom_name_;
 
       /// Separation between the wheels
@@ -85,8 +86,8 @@ namespace gazebo
       float odom_pose_[3];
       float odom_vel_[3];
 
-      bool set_joints_[4];
-      physics::JointPtr joints_[4];
+      bool set_joints_[5];
+      physics::JointPtr joints_[5];
       physics::CollisionPtr base_geom_;
 
       tf::TransformBroadcaster transform_broadcaster_;
