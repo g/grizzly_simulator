@@ -10,6 +10,7 @@
 #include "gazebo/common/Events.hh"
 
 #include <nav_msgs/Odometry.h>
+#include <grizzly_msgs/Drive.h>
 #include <geometry_msgs/TwistWithCovariance.h>
 #include <geometry_msgs/PoseWithCovariance.h>
 
@@ -41,10 +42,8 @@ namespace gazebo
       virtual void FiniChild();
   
     private:
-
       void OnContact(const std::string &name, const physics::Contact &contact);
-      void OnCmdVel( const geometry_msgs::TwistConstPtr &msg);
-
+      void OnDrive( const grizzly_msgs::DriveConstPtr &msg);
 
       /// Parameters
       std::string node_namespace_;
@@ -70,14 +69,14 @@ namespace gazebo
       ros::Publisher odom_pub_;
       ros::Publisher joint_state_pub_;
   
-      ros::Subscriber cmd_vel_sub_;
+      ros::Subscriber drive_sub_;
 
       physics::WorldPtr world_;
       physics::ModelPtr model_;
       sensors::SensorPtr parent_sensor_;
 
       /// Speeds of the wheels
-      float wheel_speed_[4];
+      float wheel_ang_vel_[4];
 
       // Simulation time of the last update
       common::Time prev_update_time_;

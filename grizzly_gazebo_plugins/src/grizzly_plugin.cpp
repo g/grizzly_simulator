@@ -37,9 +37,7 @@
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/JointState.h>
 #include <geometry_msgs/Twist.h>
-
 #include <grizzly_plugin/grizzly_plugin.h>
-
 #include <ros/time.h>
 
 using namespace gazebo;
@@ -136,11 +134,6 @@ void GrizzlyPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf )
   js_.velocity.push_back(0);
   js_.effort.push_back(0);
 
-  js_.name.push_back( fr_joint_name_ );
-  js_.position.push_back(0);
-  js_.velocity.push_back(0);
-  js_.effort.push_back(0);
-
   js_.name.push_back( fa_joint_name_ );
   js_.position.push_back(0);
   js_.velocity.push_back(0);
@@ -149,10 +142,10 @@ void GrizzlyPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf )
   prev_update_time_ = 0;
   last_cmd_vel_time_ = 0;
 
-  wheel_speed_[BL] = 0.0;
-  wheel_speed_[BR] = 0.0;
-  wheel_speed_[FL] = 0.0;
-  wheel_speed_[FR] = 0.0;
+  wheel_ang_vel_[BL] = 0.0;
+  wheel_ang_vel_[BR] = 0.0;
+  wheel_ang_vel_[FL] = 0.0;
+  wheel_ang_vel_[FR] = 0.0;
 
   set_joints_[0] = false;
   set_joints_[1] = false;
@@ -173,8 +166,6 @@ void GrizzlyPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf )
   if (joints_[FR]) set_joints_[FR] = true;
   if (joints_[FA]) set_joints_[FA] = true;
 
-
-
   //initialize time and odometry position
   prev_update_time_ = last_cmd_vel_time_ = this->world_->GetSimTime();
   odom_pose_[0] = 0.0;
@@ -187,8 +178,8 @@ void GrizzlyPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf )
   ros::init(argc, argv, "gazebo_grizzly", ros::init_options::NoSigintHandler|ros::init_options::AnonymousName);
   rosnode_ = new ros::NodeHandle( node_namespace_ );
 
-  cmd_vel_sub_ = rosnode_->subscribe("cmd_vel", 1, &GrizzlyPlugin::OnCmdVel, this );
-  odom_pub_ = rosnode_->advertise<nav_msgs::Odometry>("odom", 1);
+  drive_sub_ = rosnode_->subscribe("cmd_drive", 1, &GrizzlyPlugin::OnDrive, this );
+  odom_pub_  = rosnode_->advertise<nav_msgs::Odometry>("odom", 1);
   joint_state_pub_ = rosnode_->advertise<sensor_msgs::JointState>("joint_states", 1);
 
   // Listen to the update event. This event is broadcast every
@@ -215,7 +206,7 @@ void GrizzlyPlugin::UpdateChild()
   dr = da = 0;
 
   // Distance travelled by front wheels
-  if (set_joints_[BL])
+  if (set_joints_[BL]) 
     d_bl = step_time.Double() * (wd / 2) * joints_[BL]->GetVelocity(0);
   if (set_joints_[BR])
     d_br = step_time.Double() * (wd / 2) * joints_[BR]->GetVelocity(0);
@@ -257,22 +248,22 @@ void GrizzlyPlugin::UpdateChild()
 
   if (set_joints_[BL])
   {
-    joints_[BL]->SetVelocity( 0, wheel_speed_[BL] / (wd / 2.0) );
+    joints_[BL]->SetVelocity( 0, wheel_ang_vel_[BL]);
     joints_[BL]->SetMaxForce( 0, torque_ );
   }
   if (set_joints_[BR])
   {
-    joints_[BR]->SetVelocity( 0, wheel_speed_[BR] / (wd / 2.0) );
+    joints_[BR]->SetVelocity( 0, wheel_ang_vel_[BR]);
     joints_[BR]->SetMaxForce( 0, torque_ );
   }
   if (set_joints_[FL])
   {
-    joints_[FL]->SetVelocity( 0, wheel_speed_[FL] / (wd / 2.0) );
+    joints_[FL]->SetVelocity( 0, wheel_ang_vel_[FL]);
     joints_[FL]->SetMaxForce( 0, torque_ );
   }
   if (set_joints_[FR])
   {
-    joints_[FR]->SetVelocity( 0, wheel_speed_[FR] / (wd / 2.0) );
+    joints_[FR]->SetVelocity( 0, wheel_ang_vel_[FR]);
     joints_[FR]->SetMaxForce( 0, torque_ );
   }
 
@@ -351,25 +342,21 @@ void GrizzlyPlugin::UpdateChild()
   common::Time time_since_last_cmd = time_now - last_cmd_vel_time_;
   if (time_since_last_cmd.Double() > 0.1)
   {
-    wheel_speed_[BL] = 0;
-    wheel_speed_[BR] = 0;
-    wheel_speed_[FL] = 0;
-    wheel_speed_[FR] = 0;
+    wheel_ang_vel_[BL] = 0;
+    wheel_ang_vel_[BR] = 0;
+    wheel_ang_vel_[FL] = 0;
+    wheel_ang_vel_[FR] = 0;
   }
 }
 
 
-void GrizzlyPlugin::OnCmdVel( const geometry_msgs::TwistConstPtr &msg)
+void GrizzlyPlugin::OnDrive( const grizzly_msgs::DriveConstPtr &msg)
 {
-  last_cmd_vel_time_ = this->world_->GetSimTime();
-  double vr, va;
-  vr = msg->linear.x;
-  va = msg->angular.z;
-
-  wheel_speed_[BL] = vr - va * (wheel_sep_) / 2;
-  wheel_speed_[BR] = vr + va * (wheel_sep_) / 2;
-  wheel_speed_[FL] = vr - va * (wheel_sep_) / 2;
-  wheel_speed_[FR] = vr + va * (wheel_sep_) / 2;
+  last_cmd_vel_time_ = this->world_->GetSimTime();  
+  wheel_ang_vel_[BL] = msg->rear_left;
+  wheel_ang_vel_[BR] = msg->rear_right;
+  wheel_ang_vel_[FL] = msg->front_left;
+  wheel_ang_vel_[FR] = msg->front_right;
 }
 
 void GrizzlyPlugin::spin()
