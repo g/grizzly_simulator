@@ -133,10 +133,10 @@ void GrizzlyPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf )
   prev_update_time_ = 0;
   last_cmd_vel_time_ = 0;
 
-  wheel_ang_vel_[BL] = 0.0;
-  wheel_ang_vel_[BR] = 0.0;
-  wheel_ang_vel_[FL] = 0.0;
-  wheel_ang_vel_[FR] = 0.0;
+  wheel_ang_vel_.rear_left = 0.0;
+  wheel_ang_vel_.rear_right= 0.0;
+  wheel_ang_vel_.front_left = 0.0;
+  wheel_ang_vel_.front_left = 0.0;
 
   set_joints_[0] = false;
   set_joints_[1] = false;
@@ -239,22 +239,22 @@ void GrizzlyPlugin::UpdateChild()
 
   if (set_joints_[BL])
   {
-    joints_[BL]->SetVelocity( 0, wheel_ang_vel_[BL]);
+    joints_[BL]->SetVelocity( 0, wheel_ang_vel_.rear_left);
     joints_[BL]->SetMaxForce( 0, torque_ );
   }
   if (set_joints_[BR])
   {
-    joints_[BR]->SetVelocity( 0, wheel_ang_vel_[BR]);
+    joints_[BR]->SetVelocity( 0, wheel_ang_vel_.rear_right);
     joints_[BR]->SetMaxForce( 0, torque_ );
   }
   if (set_joints_[FL])
   {
-    joints_[FL]->SetVelocity( 0, wheel_ang_vel_[FL]);
+    joints_[FL]->SetVelocity( 0, wheel_ang_vel_.front_left);
     joints_[FL]->SetMaxForce( 0, torque_ );
   }
   if (set_joints_[FR])
   {
-    joints_[FR]->SetVelocity( 0, wheel_ang_vel_[FR]);
+    joints_[FR]->SetVelocity( 0, wheel_ang_vel_.front_right);
     joints_[FR]->SetMaxForce( 0, torque_ );
   }
 
@@ -333,10 +333,10 @@ void GrizzlyPlugin::UpdateChild()
   common::Time time_since_last_cmd = time_now - last_cmd_vel_time_;
   if (time_since_last_cmd.Double() > 0.1)
   {
-    wheel_ang_vel_[BL] = 0;
-    wheel_ang_vel_[BR] = 0;
-    wheel_ang_vel_[FL] = 0;
-    wheel_ang_vel_[FR] = 0;
+    wheel_ang_vel_.rear_left = 0;
+    wheel_ang_vel_.rear_right = 0;
+    wheel_ang_vel_.front_left = 0;
+    wheel_ang_vel_.front_right = 0;
   }
 }
 
@@ -344,10 +344,7 @@ void GrizzlyPlugin::UpdateChild()
 void GrizzlyPlugin::OnDrive( const grizzly_msgs::DriveConstPtr &msg)
 {
   last_cmd_vel_time_ = this->world_->GetSimTime();  
-  wheel_ang_vel_[BL] = msg->rear_left;
-  wheel_ang_vel_[BR] = msg->rear_right;
-  wheel_ang_vel_[FL] = msg->front_left;
-  wheel_ang_vel_[FR] = msg->front_right;
+  wheel_ang_vel_ = *msg;
 }
 
 void GrizzlyPlugin::spin()

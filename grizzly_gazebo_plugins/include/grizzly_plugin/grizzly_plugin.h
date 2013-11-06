@@ -94,7 +94,7 @@ namespace gazebo
       sensors::SensorPtr parent_sensor_;
 
       /// Speeds of the wheels
-      float wheel_ang_vel_[4];
+      grizzly_msgs::Drive wheel_ang_vel_;
 
       // Simulation time of the last update
       common::Time prev_update_time_;
