@@ -40,7 +40,11 @@
   <!-- Use test_depend for packages you need only for testing: -->
   <!--   <test_depend>gtest</test_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>grizzly_msgs</build_depend>
   <run_depend>gazebo_ros</run_depend>
+  <run_depend>grizzly_description</run_depend>
+  <run_depend>grizzly_motion</run_depend>
+  <run_depend>grizzly_gazebo_plugins</run_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->
