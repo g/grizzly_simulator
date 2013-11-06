@@ -149,7 +149,7 @@ void GrizzlyPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf )
   joints_[BR] = model_->GetJoint(br_joint_name_);
   joints_[FL] = model_->GetJoint(fl_joint_name_);
   joints_[FR] = model_->GetJoint(fr_joint_name_);
-  joints_[FR] = model_->GetJoint(fa_joint_name_);
+  joints_[FA] = model_->GetJoint(fa_joint_name_);
 
   if (joints_[BL]) set_joints_[BL] = true;
   if (joints_[BR]) set_joints_[BR] = true;
