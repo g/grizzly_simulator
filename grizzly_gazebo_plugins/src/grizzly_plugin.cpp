@@ -1,45 +1,34 @@
-/*
- * Copyright (c) 2012, Clearpath Robotics, Inc.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- *     * Redistributions of source code must retain the above copyright
- *       notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above copyright
- *       notice, this list of conditions and the following disclaimer in the
- *       documentation and/or other materials provided with the distribution.
- *     * Neither the name of Clearpath Robotics, Inc. nor the names of its
- *       contributors may be used to endorse or promote products derived from
- *       this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */
+/**
+Software License Agreement (BSD)
 
-/*
- * Desc: Gazebo 1.x plugin for a Clearpath Robotics Grizzly
- * Adapted from the TurtleBot plugin
- * Author: Ryan Gariepy
- */ 
+\file      grizzly_plugin.cpp
+\authors   Yan Ma <yanma@clearpathrobotics.com>, Ryan Gariepy <rgariepy@clearpathrobotics.com>
+\copyright Copyright (c) 2013, Clearpath Robotics, Inc., All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that
+the following conditions are met:
+ * Redistributions of source code must retain the above copyright notice, this list of conditions and the
+   following disclaimer.
+ * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the 
+   following disclaimer in the documentation and/or other materials provided with the distribution.
+ * Neither the name of Clearpath Robotics nor the names of its contributors may be used to endorse or promote
+   products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WAR-
+RANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, IN-
+DIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+ 
 
 #include <boost/thread.hpp>
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/JointState.h>
 #include <geometry_msgs/Twist.h>
-
 #include <grizzly_plugin/grizzly_plugin.h>
-
 #include <ros/time.h>
 
 using namespace gazebo;
@@ -136,11 +125,6 @@ void GrizzlyPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf )
   js_.velocity.push_back(0);
   js_.effort.push_back(0);
 
-  js_.name.push_back( fr_joint_name_ );
-  js_.position.push_back(0);
-  js_.velocity.push_back(0);
-  js_.effort.push_back(0);
-
   js_.name.push_back( fa_joint_name_ );
   js_.position.push_back(0);
   js_.velocity.push_back(0);
@@ -149,10 +133,10 @@ void GrizzlyPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf )
   prev_update_time_ = 0;
   last_cmd_vel_time_ = 0;
 
-  wheel_speed_[BL] = 0.0;
-  wheel_speed_[BR] = 0.0;
-  wheel_speed_[FL] = 0.0;
-  wheel_speed_[FR] = 0.0;
+  wheel_ang_vel_.rear_left = 0.0;
+  wheel_ang_vel_.rear_right= 0.0;
+  wheel_ang_vel_.front_left = 0.0;
+  wheel_ang_vel_.front_left = 0.0;
 
   set_joints_[0] = false;
   set_joints_[1] = false;
@@ -165,15 +149,13 @@ void GrizzlyPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf )
   joints_[BR] = model_->GetJoint(br_joint_name_);
   joints_[FL] = model_->GetJoint(fl_joint_name_);
   joints_[FR] = model_->GetJoint(fr_joint_name_);
-  joints_[FR] = model_->GetJoint(fa_joint_name_);
+  joints_[FA] = model_->GetJoint(fa_joint_name_);
 
   if (joints_[BL]) set_joints_[BL] = true;
   if (joints_[BR]) set_joints_[BR] = true;
   if (joints_[FL]) set_joints_[FL] = true;
   if (joints_[FR]) set_joints_[FR] = true;
   if (joints_[FA]) set_joints_[FA] = true;
-
-
 
   //initialize time and odometry position
   prev_update_time_ = last_cmd_vel_time_ = this->world_->GetSimTime();
@@ -187,8 +169,8 @@ void GrizzlyPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf )
   ros::init(argc, argv, "gazebo_grizzly", ros::init_options::NoSigintHandler|ros::init_options::AnonymousName);
   rosnode_ = new ros::NodeHandle( node_namespace_ );
 
-  cmd_vel_sub_ = rosnode_->subscribe("cmd_vel", 1, &GrizzlyPlugin::OnCmdVel, this );
-  odom_pub_ = rosnode_->advertise<nav_msgs::Odometry>("odom", 1);
+  drive_sub_ = rosnode_->subscribe("cmd_drive", 1, &GrizzlyPlugin::OnDrive, this );
+  odom_pub_  = rosnode_->advertise<nav_msgs::Odometry>("odom", 1);
   joint_state_pub_ = rosnode_->advertise<sensor_msgs::JointState>("joint_states", 1);
 
   // Listen to the update event. This event is broadcast every
@@ -215,7 +197,7 @@ void GrizzlyPlugin::UpdateChild()
   dr = da = 0;
 
   // Distance travelled by front wheels
-  if (set_joints_[BL])
+  if (set_joints_[BL]) 
     d_bl = step_time.Double() * (wd / 2) * joints_[BL]->GetVelocity(0);
   if (set_joints_[BR])
     d_br = step_time.Double() * (wd / 2) * joints_[BR]->GetVelocity(0);
@@ -257,22 +239,22 @@ void GrizzlyPlugin::UpdateChild()
 
   if (set_joints_[BL])
   {
-    joints_[BL]->SetVelocity( 0, wheel_speed_[BL] / (wd / 2.0) );
+    joints_[BL]->SetVelocity( 0, wheel_ang_vel_.rear_left);
     joints_[BL]->SetMaxForce( 0, torque_ );
   }
   if (set_joints_[BR])
   {
-    joints_[BR]->SetVelocity( 0, wheel_speed_[BR] / (wd / 2.0) );
+    joints_[BR]->SetVelocity( 0, wheel_ang_vel_.rear_right);
     joints_[BR]->SetMaxForce( 0, torque_ );
   }
   if (set_joints_[FL])
   {
-    joints_[FL]->SetVelocity( 0, wheel_speed_[FL] / (wd / 2.0) );
+    joints_[FL]->SetVelocity( 0, wheel_ang_vel_.front_left);
     joints_[FL]->SetMaxForce( 0, torque_ );
   }
   if (set_joints_[FR])
   {
-    joints_[FR]->SetVelocity( 0, wheel_speed_[FR] / (wd / 2.0) );
+    joints_[FR]->SetVelocity( 0, wheel_ang_vel_.front_right);
     joints_[FR]->SetMaxForce( 0, torque_ );
   }
 
@@ -351,25 +333,18 @@ void GrizzlyPlugin::UpdateChild()
   common::Time time_since_last_cmd = time_now - last_cmd_vel_time_;
   if (time_since_last_cmd.Double() > 0.1)
   {
-    wheel_speed_[BL] = 0;
-    wheel_speed_[BR] = 0;
-    wheel_speed_[FL] = 0;
-    wheel_speed_[FR] = 0;
+    wheel_ang_vel_.rear_left = 0;
+    wheel_ang_vel_.rear_right = 0;
+    wheel_ang_vel_.front_left = 0;
+    wheel_ang_vel_.front_right = 0;
   }
 }
 
 
-void GrizzlyPlugin::OnCmdVel( const geometry_msgs::TwistConstPtr &msg)
+void GrizzlyPlugin::OnDrive( const grizzly_msgs::DriveConstPtr &msg)
 {
-  last_cmd_vel_time_ = this->world_->GetSimTime();
-  double vr, va;
-  vr = msg->linear.x;
-  va = msg->angular.z;
-
-  wheel_speed_[BL] = vr - va * (wheel_sep_) / 2;
-  wheel_speed_[BR] = vr + va * (wheel_sep_) / 2;
-  wheel_speed_[FL] = vr - va * (wheel_sep_) / 2;
-  wheel_speed_[FR] = vr + va * (wheel_sep_) / 2;
+  last_cmd_vel_time_ = this->world_->GetSimTime();  
+  wheel_ang_vel_ = *msg;
 }
 
 void GrizzlyPlugin::spin()
@@ -378,4 +353,3 @@ void GrizzlyPlugin::spin()
 }
 
 GZ_REGISTER_MODEL_PLUGIN(GrizzlyPlugin);
-
