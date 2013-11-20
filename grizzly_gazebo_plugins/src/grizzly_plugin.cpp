@@ -88,9 +88,9 @@ void GrizzlyPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf )
   if (_sdf->HasElement("frontRightJoint"))
     fr_joint_name_ = _sdf->GetElement("frontRightJoint")->Get<std::string>();
 
-  fa_joint_name_ = "frontAxelJoint";
-  if (_sdf->HasElement("frontAxelJoint"))
-    fa_joint_name_ = _sdf->GetElement("frontAxelJoint")->Get<std::string>();
+  fa_joint_name_ = "frontAxleJoint";
+  if (_sdf->HasElement("frontAxleJoint"))
+    fa_joint_name_ = _sdf->GetElement("frontAxleJoint")->Get<std::string>();
 
   wheel_sep_ = 0.55;
   if (_sdf->HasElement("wheelSeparation"))
