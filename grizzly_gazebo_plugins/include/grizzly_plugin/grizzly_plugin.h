@@ -1,3 +1,27 @@
+/**
+Software License Agreement (BSD)
+
+\file      grizzly_plugin.h
+\authors   Yan Ma <yanma@clearpathrobotics.com>, Ryan Gariepy <rgariepy@clearpathrobotics.com>
+\copyright Copyright (c) 2013, Clearpath Robotics, Inc., All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that
+the following conditions are met:
+ * Redistributions of source code must retain the above copyright notice, this list of conditions and the
+   following disclaimer.
+ * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the 
+   following disclaimer in the documentation and/or other materials provided with the distribution.
+ * Neither the name of Clearpath Robotics nor the names of its contributors may be used to endorse or promote
+   products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WAR-
+RANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, IN-
+DIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
 #ifndef GAZEBO_ROS_CREATE_H
 #define GAZEBO_ROS_CREATE_H
 
@@ -10,6 +34,7 @@
 #include "gazebo/common/Events.hh"
 
 #include <nav_msgs/Odometry.h>
+#include <grizzly_msgs/Drive.h>
 #include <geometry_msgs/TwistWithCovariance.h>
 #include <geometry_msgs/PoseWithCovariance.h>
 
@@ -20,12 +45,6 @@
 #include <ros/callback_queue.h>
 #include <ros/advertise_options.h>
 
-
-/*
- * Desc: Gazebo 1.x plugin for a Clearpath Robotics Husky A200
- * Adapted from the TurtleBot plugin
- * Author: Ryan Gariepy
- */ 
 
 namespace gazebo
 {
@@ -41,10 +60,8 @@ namespace gazebo
       virtual void FiniChild();
   
     private:
-
       void OnContact(const std::string &name, const physics::Contact &contact);
-      void OnCmdVel( const geometry_msgs::TwistConstPtr &msg);
-
+      void OnDrive( const grizzly_msgs::DriveConstPtr &msg);
 
       /// Parameters
       std::string node_namespace_;
@@ -70,14 +87,14 @@ namespace gazebo
       ros::Publisher odom_pub_;
       ros::Publisher joint_state_pub_;
   
-      ros::Subscriber cmd_vel_sub_;
+      ros::Subscriber drive_sub_;
 
       physics::WorldPtr world_;
       physics::ModelPtr model_;
       sensors::SensorPtr parent_sensor_;
 
       /// Speeds of the wheels
-      float wheel_speed_[4];
+      grizzly_msgs::Drive wheel_ang_vel_;
 
       // Simulation time of the last update
       common::Time prev_update_time_;
