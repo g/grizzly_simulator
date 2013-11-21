@@ -38,7 +38,7 @@ robot model in Gazebo
         sensor_timeout: 1.0
         publish_tf: true
         odom_used: true
-        vo_used: true
+        vo_used: false 
         output_frame: odom
       </rosparam>
     </node>
