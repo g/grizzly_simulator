@@ -32,15 +32,7 @@ robot model in Gazebo
 <launch>
     <include file="$(find grizzly_gazebo)/launch/base_gazebo.launch"/>
     <include file="$(find gazebo_ros)/launch/empty_world.launch"/>
-    <node pkg="robot_pose_ekf" type="robot_pose_ekf" name="robot_pose_ekf">
-      <rosparam>
-        freq: 10.0
-        sensor_timeout: 1.0
-        publish_tf: true
-        odom_used: true
-        vo_used: false 
-        output_frame: odom
-      </rosparam>
-    </node>
-    <node pkg="grizzly_motion" type="motion_generator" name="grizzly_motion_generator" />
+    <include file="$(find grizzly_motion)/launch/motion.launch">
+        <arg name="simulate" value="true" />
+    </include>a
 </launch>

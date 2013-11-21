@@ -81,14 +81,6 @@ void GrizzlyPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf )
   if (_sdf->HasElement("frontAxleJoint"))
     fa_joint_name_ = _sdf->GetElement("frontAxleJoint")->Get<std::string>();
 
-  wheel_sep_ = 0.55;
-  if (_sdf->HasElement("wheelSeparation"))
-    wheel_sep_ = _sdf->GetElement("wheelSeparation")->Get<double>();
-
-  wheel_diam_ = 0.30;
-  if (_sdf->HasElement("wheelDiameter"))
-    wheel_diam_ = _sdf->GetElement("wheelDiameter")->Get<double>();
-
   torque_ = 15.0;
   if (_sdf->HasElement("torque"))
     torque_ = _sdf->GetElement("torque")->Get<double>();
@@ -159,9 +151,6 @@ void GrizzlyPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf )
 
   //initialize time and odometry position
   prev_update_time_ = last_cmd_vel_time_ = this->world_->GetSimTime();
-  odom_pose_[0] = 0.0;
-  odom_pose_[1] = 0.0;
-  odom_pose_[2] = 0.0;
 
   // Initialize the ROS node and subscribe to cmd_vel
   int argc = 0;
@@ -171,6 +160,7 @@ void GrizzlyPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf )
 
   drive_sub_ = rosnode_->subscribe("cmd_drive", 1, &GrizzlyPlugin::OnDrive, this );
   odom_pub_  = rosnode_->advertise<nav_msgs::Odometry>("odom", 1);
+  encoder_pub_  = rosnode_->advertise<grizzly_msgs::Drive>("motors/encoders", 1);
   joint_state_pub_ = rosnode_->advertise<sensor_msgs::JointState>("joint_states", 1);
 
   // Listen to the update event. This event is broadcast every
@@ -185,149 +175,51 @@ void GrizzlyPlugin::UpdateChild()
   common::Time time_now = this->world_->GetSimTime();
   common::Time step_time = time_now - prev_update_time_;
   prev_update_time_ = time_now;
+  grizzly_msgs::Drive encoder_msg;
 
-  double wd, ws;
-  double d_bl, d_br, d_fl, d_fr;
-  double dr, da;
-
-  wd = wheel_diam_;
-  ws = wheel_sep_;
-
-  d_bl = d_br = d_fl = d_fr = 0;
-  dr = da = 0;
-
-  // Distance travelled by front wheels
-  if (set_joints_[BL]) 
-    d_bl = step_time.Double() * (wd / 2) * joints_[BL]->GetVelocity(0);
-  if (set_joints_[BR])
-    d_br = step_time.Double() * (wd / 2) * joints_[BR]->GetVelocity(0);
-  if (set_joints_[FL])
-    d_fl = step_time.Double() * (wd / 2) * joints_[FL]->GetVelocity(0);
-  if (set_joints_[FR])
-    d_fr = step_time.Double() * (wd / 2) * joints_[FR]->GetVelocity(0);
-
-  // Can see NaN values here, just zero them out if needed
-  if (isnan(d_bl)) {
-    ROS_WARN_THROTTLE(0.1, "Gazebo ROS Grizzly plugin. NaN in d_bl. Step time: %.2f. WD: %.2f. Velocity: %.2f", step_time.Double(), wd, joints_[BL]->GetVelocity(0));
-    d_bl = 0;
-  }
-  if (isnan(d_br)) {
-    ROS_WARN_THROTTLE(0.1, "Gazebo ROS Grizzly plugin. NaN in d_br. Step time: %.2f. WD: %.2f. Velocity: %.2f", step_time.Double(), wd, joints_[BR]->GetVelocity(0));
-    d_br = 0;
-  }
-  if (isnan(d_fl)) {
-    ROS_WARN_THROTTLE(0.1, "Gazebo ROS Grizzly plugin. NaN in d_fl. Step time: %.2f. WD: %.2f. Velocity: %.2f", step_time.Double(), wd, joints_[FL]->GetVelocity(0));
-    d_fl = 0;
-  }
-  if (isnan(d_fr)) {
-    ROS_WARN_THROTTLE(0.1, "Gazebo ROS Grizzly plugin. NaN in d_fr. Step time: %.2f. WD: %.2f. Velocity: %.2f", step_time.Double(), wd, joints_[FR]->GetVelocity(0));
-    d_fr = 0;
-  }
-
-  dr = (d_bl + d_br + d_fl + d_fr) / 4;
-  da = ((d_br+d_fr)/2 - (d_bl+d_fl)/2) / ws;
-
-  // Compute odometric pose
-  odom_pose_[0] += dr * cos( odom_pose_[2] );
-  odom_pose_[1] += dr * sin( odom_pose_[2] );
-  odom_pose_[2] += da;
-
-  // Compute odometric instantaneous velocity
-  odom_vel_[0] = dr / step_time.Double();
-  odom_vel_[1] = 0.0;
-  odom_vel_[2] = da / step_time.Double();
-
+  // set joint velocity based on teleop input and publish joint states
+  js_.header.stamp.sec = time_now.sec;
+  js_.header.stamp.nsec = time_now.nsec;
   if (set_joints_[BL])
   {
     joints_[BL]->SetVelocity( 0, wheel_ang_vel_.rear_left);
     joints_[BL]->SetMaxForce( 0, torque_ );
+    js_.position[0] = joints_[BL]->GetAngle(0).Radian();
+    js_.velocity[0] = encoder_msg.rear_left = joints_[BL]->GetVelocity(0);
   }
   if (set_joints_[BR])
   {
     joints_[BR]->SetVelocity( 0, wheel_ang_vel_.rear_right);
     joints_[BR]->SetMaxForce( 0, torque_ );
+    js_.position[1] = joints_[BR]->GetAngle(0).Radian();
+    js_.velocity[1] = encoder_msg.rear_right = joints_[BR]->GetVelocity(0);
   }
   if (set_joints_[FL])
   {
     joints_[FL]->SetVelocity( 0, wheel_ang_vel_.front_left);
     joints_[FL]->SetMaxForce( 0, torque_ );
+    js_.position[3] = joints_[FR]->GetAngle(0).Radian();
+    js_.velocity[3] = encoder_msg.front_right = joints_[FR]->GetVelocity(0);
   }
   if (set_joints_[FR])
   {
     joints_[FR]->SetVelocity( 0, wheel_ang_vel_.front_right);
     joints_[FR]->SetMaxForce( 0, torque_ );
-  }
-
-  nav_msgs::Odometry odom;
-  odom.header.stamp.sec = time_now.sec;
-  odom.header.stamp.nsec = time_now.nsec;
-  odom.header.frame_id = "odom";
-  odom.child_frame_id = "base_footprint";
-  odom.pose.pose.position.x = odom_pose_[0];
-  odom.pose.pose.position.y = odom_pose_[1];
-  odom.pose.pose.position.z = 0;
-
-  tf::Quaternion qt;
-  qt.setRPY(0,0,odom_pose_[2]);
-
-  odom.pose.pose.orientation.x = qt.getX();
-  odom.pose.pose.orientation.y = qt.getY();
-  odom.pose.pose.orientation.z = qt.getZ();
-  odom.pose.pose.orientation.w = qt.getW();
-
-  double pose_cov[36] = { 1e-3, 0, 0, 0, 0, 0,
-                          0, 1e-3, 0, 0, 0, 0,
-                          0, 0, 1e6, 0, 0, 0,
-                          0, 0, 0, 1e6, 0, 0,
-                          0, 0, 0, 0, 1e6, 0,
-                          0, 0, 0, 0, 0, 1e3};
-
-  memcpy( &odom.pose.covariance[0], pose_cov, sizeof(double)*36 );
-  memcpy( &odom.twist.covariance[0], pose_cov, sizeof(double)*36 );
-
-  odom.twist.twist.linear.x = 0;
-  odom.twist.twist.linear.y = 0;
-  odom.twist.twist.linear.z = 0;
-
-  odom.twist.twist.angular.x = 0;
-  odom.twist.twist.angular.y = 0;
-  odom.twist.twist.angular.z = 0;
-
-  odom_pub_.publish( odom ); 
-
-  js_.header.stamp.sec = time_now.sec;
-  js_.header.stamp.nsec = time_now.nsec;
-  if (this->set_joints_[BL])
-  {
-    js_.position[0] = joints_[BL]->GetAngle(0).Radian();
-    js_.velocity[0] = joints_[BL]->GetVelocity(0);
-  }
-
-  if (this->set_joints_[BR])
-  {
-    js_.position[1] = joints_[BR]->GetAngle(0).Radian();
-    js_.velocity[1] = joints_[BR]->GetVelocity(0);
-  }
-
-  if (this->set_joints_[FL])
-  {
     js_.position[2] = joints_[FL]->GetAngle(0).Radian();
-    js_.velocity[2] = joints_[FL]->GetVelocity(0);
+    js_.velocity[2] = encoder_msg.front_left = joints_[FL]->GetVelocity(0);
   }
 
-  if (this->set_joints_[FR])
-  {
-    js_.position[3] = joints_[FR]->GetAngle(0).Radian();
-    js_.velocity[3] = joints_[FR]->GetVelocity(0);
-  }
-
-  if (this->set_joints_[FA])
+  if (set_joints_[FA])
   {
     js_.position[4] = joints_[FA]->GetAngle(0).Radian();
     js_.velocity[4] = joints_[FA]->GetVelocity(0);
   }
 
+  // publish joint states
   joint_state_pub_.publish( js_ );
+
+  // publish encoder message
+  encoder_pub_.publish( encoder_msg );
 
   // Timeout if we haven't received a cmd in <0.1 s
   common::Time time_since_last_cmd = time_now - last_cmd_vel_time_;
