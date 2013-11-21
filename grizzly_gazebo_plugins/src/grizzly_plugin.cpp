@@ -159,7 +159,6 @@ void GrizzlyPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf )
   rosnode_ = new ros::NodeHandle( node_namespace_ );
 
   drive_sub_ = rosnode_->subscribe("cmd_drive", 1, &GrizzlyPlugin::OnDrive, this );
-  odom_pub_  = rosnode_->advertise<nav_msgs::Odometry>("odom", 1);
   encoder_pub_  = rosnode_->advertise<grizzly_msgs::Drive>("motors/encoders", 1);
   joint_state_pub_ = rosnode_->advertise<sensor_msgs::JointState>("joint_states", 1);
 
@@ -219,6 +218,8 @@ void GrizzlyPlugin::UpdateChild()
   joint_state_pub_.publish( js_ );
 
   // publish encoder message
+  encoder_msg.header.stamp.sec = time_now.sec;
+  encoder_msg.header.stamp.nsec = time_now.nsec;
   encoder_pub_.publish( encoder_msg );
 
   // Timeout if we haven't received a cmd in <0.1 s
