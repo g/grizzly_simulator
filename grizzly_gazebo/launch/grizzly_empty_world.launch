@@ -34,5 +34,5 @@ robot model in Gazebo
     <include file="$(find gazebo_ros)/launch/empty_world.launch"/>
     <include file="$(find grizzly_motion)/launch/motion.launch">
         <arg name="simulate" value="true" />
-    </include>a
+    </include>
 </launch>
