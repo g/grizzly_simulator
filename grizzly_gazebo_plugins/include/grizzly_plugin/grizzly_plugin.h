@@ -72,21 +72,14 @@ namespace gazebo
       std::string fa_joint_name_;
       std::string base_geom_name_;
 
-      /// Separation between the wheels
-      float wheel_sep_;
-
-      /// Diameter of the wheels
-      float wheel_diam_;
-
       ///Torque applied to the wheels
       float torque_;
 
       ros::NodeHandle *rosnode_;
   
-      ros::Publisher sensor_state_pub_;
+      ros::Publisher encoder_pub_;
       ros::Publisher odom_pub_;
       ros::Publisher joint_state_pub_;
-  
       ros::Subscriber drive_sub_;
 
       physics::WorldPtr world_;
@@ -100,9 +93,6 @@ namespace gazebo
       common::Time prev_update_time_;
       common::Time last_cmd_vel_time_;
 
-      float odom_pose_[3];
-      float odom_vel_[3];
-
       bool set_joints_[5];
       physics::JointPtr joints_[5];
       physics::CollisionPtr base_geom_;
@@ -112,7 +102,6 @@ namespace gazebo
 
       void spin();
       boost::thread *spinner_thread_;
-
       event::ConnectionPtr contact_event_;
 
       // Pointer to the update event connection
