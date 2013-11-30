@@ -2,7 +2,7 @@
 <package>
   <name>grizzly_gazebo</name>
   <version>0.0.3</version>
-  <description>The grizzly_gazebo package</description>
+  <description>Example launchfiles for working with the Grizzly simulator.</description>
   <maintainer email="yanma@clearpathrobotics.com">Yan Ma</maintainer>
   <license>BSD</license>
 

@@ -2,7 +2,7 @@
 <package>
   <name>grizzly_simulator</name>
   <version>0.0.3</version>
-  <description>The grizzly_simulator package</description>
+  <description>Metapackage allowing easy installation of Grizzly simulation components.</description>
 
   <maintainer email="yanma@clearpathrobotics.com">Yan Ma</maintainer>
 
