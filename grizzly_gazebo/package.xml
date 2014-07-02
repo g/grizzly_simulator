@@ -11,6 +11,7 @@
   <run_depend>gazebo_ros</run_depend>
   <run_depend>grizzly_description</run_depend>
   <run_depend>grizzly_motion</run_depend>
+  <run_depend>grizzly_navigation</run_depend>
   <run_depend>grizzly_gazebo_plugins</run_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
