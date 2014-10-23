@@ -30,6 +30,11 @@ robot model in Gazebo
 -->
 
 <launch>
-    <include file="$(find grizzly_gazebo)/launch/grizzly.launch"/>
-    <include file="$(find gazebo_ros)/launch/empty_world.launch"/>
+  <arg name="description" default="$(find grizzly_description)/urdf/base.urdf.xacro" />
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch"/>
+
+  <include file="$(find grizzly_gazebo)/launch/grizzly.launch">
+    <arg name="description" value="$(arg description)" />
+  </include>
 </launch>

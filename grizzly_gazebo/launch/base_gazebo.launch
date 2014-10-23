@@ -30,24 +30,23 @@ robot model in Gazebo
 -->
 
 <launch>
+  <arg name="description" />
+  <param name="use_sim_time" value="true" />
 
-	<param name="use_sim_time" value="true" />
+  <!-- Send the Grizzly Robot URDF to param server -->
+  <param name="robot_description" command="$(find xacro)/xacro.py '$(arg description)'" />
 
-	<!-- Send the Grizzly Robot URDF/XACRO to param server -->
-	<param name="robot_description" command="$(find xacro)/xacro.py '$(find grizzly_description)/urdf/base.urdf.xacro'" />
+  <!-- push robot_description to factory and spawn robot in gazebo -->
+  <node name="spawn_robot" pkg="gazebo_ros" type="spawn_model"
+    args="-param robot_description
+          -urdf
+          -z 0.2
+          -model robot_description"
+    respawn="false" output="screen" />
 
-	<!-- push robot_description to factory and spawn robot in gazebo -->
-	<node name="spawn_robot" pkg="gazebo_ros" type="spawn_model"
-		args="-param robot_description
-		-urdf
-		-z 1
-		-model robot_description"
-		respawn="false" output="screen" />
-
-	<!-- start robot state publisher -->
-	<node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen" >
-		<param name="publish_frequency" type="double" value="50.0" />
-		<param name="tf_prefix" type="string" value="" />
-	</node>
-
+  <!-- start robot state publisher -->
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen" >
+    <param name="publish_frequency" type="double" value="50.0" />
+    <param name="tf_prefix" type="string" value="" />
+  </node>
 </launch>
