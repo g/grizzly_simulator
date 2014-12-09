@@ -33,7 +33,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
 
 using namespace gazebo;
 
-enum {BL= 0, BR=1, FL=2, FR=3, FA=4};
+enum {RL= 0, RR=1, FL=2, FR=3, FA=4};
 
 GrizzlyPlugin::GrizzlyPlugin()
 {
@@ -61,19 +61,19 @@ void GrizzlyPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf )
     this->node_namespace_ = _sdf->GetElement("robotNamespace")->Get<std::string>() + "/";
 
 
-  bl_joint_name_ = "rearLeftJoint";
+  rl_joint_name_ = "joint_rear_left_wheel";
   if (_sdf->HasElement("rearLeftJoint"))
-    bl_joint_name_ = _sdf->GetElement("rearLeftJoint")->Get<std::string>();
+    rl_joint_name_ = _sdf->GetElement("rearLeftJoint")->Get<std::string>();
 
-  br_joint_name_ = "rearRightJoint";
+  rr_joint_name_ = "joint_rear_right_wheel";
   if (_sdf->HasElement("rearRightJoint"))
-    br_joint_name_ = _sdf->GetElement("rearRightJoint")->Get<std::string>();
+    rr_joint_name_ = _sdf->GetElement("rearRightJoint")->Get<std::string>();
 
-  fl_joint_name_ = "frontLeftJoint";
+  fl_joint_name_ = "joint_front_left_wheel";
   if (_sdf->HasElement("frontLeftJoint"))
     fl_joint_name_ = _sdf->GetElement("frontLeftJoint")->Get<std::string>();
 
-  fr_joint_name_ = "frontRightJoint";
+  fr_joint_name_ = "joint_front_right_wheel";
   if (_sdf->HasElement("frontRightJoint"))
     fr_joint_name_ = _sdf->GetElement("frontRightJoint")->Get<std::string>();
 
@@ -97,12 +97,12 @@ void GrizzlyPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf )
   std::string modelName = _sdf->GetParent()->Get<std::string>("name");
   gzdbg << "plugin model name: " << modelName << "\n";
 
-  js_.name.push_back( bl_joint_name_ );
+  js_.name.push_back( rl_joint_name_ );
   js_.position.push_back(0);
   js_.velocity.push_back(0);
   js_.effort.push_back(0);
 
-  js_.name.push_back( br_joint_name_ );
+  js_.name.push_back( rr_joint_name_ );
   js_.position.push_back(0);
   js_.velocity.push_back(0);
   js_.effort.push_back(0);
@@ -137,14 +137,14 @@ void GrizzlyPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf )
   set_joints_[4] = false;
 
   //TODO: fix this
-  joints_[BL] = model_->GetJoint(bl_joint_name_);
-  joints_[BR] = model_->GetJoint(br_joint_name_);
+  joints_[RL] = model_->GetJoint(rl_joint_name_);
+  joints_[RR] = model_->GetJoint(rr_joint_name_);
   joints_[FL] = model_->GetJoint(fl_joint_name_);
   joints_[FR] = model_->GetJoint(fr_joint_name_);
   joints_[FA] = model_->GetJoint(fa_joint_name_);
 
-  if (joints_[BL]) set_joints_[BL] = true;
-  if (joints_[BR]) set_joints_[BR] = true;
+  if (joints_[RL]) set_joints_[RL] = true;
+  if (joints_[RR]) set_joints_[RR] = true;
   if (joints_[FL]) set_joints_[FL] = true;
   if (joints_[FR]) set_joints_[FR] = true;
   if (joints_[FA]) set_joints_[FA] = true;
@@ -179,33 +179,33 @@ void GrizzlyPlugin::UpdateChild()
   // set joint velocity based on teleop input and publish joint states
   js_.header.stamp.sec = time_now.sec;
   js_.header.stamp.nsec = time_now.nsec;
-  if (set_joints_[BL])
+  if (set_joints_[RL])
   {
-    joints_[BL]->SetVelocity( 0, wheel_ang_vel_.rear_left);
-    joints_[BL]->SetMaxForce( 0, torque_ );
-    js_.position[0] = joints_[BL]->GetAngle(0).Radian();
-    js_.velocity[0] = encoder_msg.rear_left = joints_[BL]->GetVelocity(0);
+    joints_[RL]->SetVelocity( 0, wheel_ang_vel_.rear_left);
+    joints_[RL]->SetMaxForce( 0, torque_ );
+    js_.position[RL] = joints_[RL]->GetAngle(0).Radian();
+    js_.velocity[RL] = encoder_msg.rear_left = joints_[RL]->GetVelocity(0);
   }
-  if (set_joints_[BR])
+  if (set_joints_[RR])
   {
-    joints_[BR]->SetVelocity( 0, wheel_ang_vel_.rear_right);
-    joints_[BR]->SetMaxForce( 0, torque_ );
-    js_.position[1] = joints_[BR]->GetAngle(0).Radian();
-    js_.velocity[1] = encoder_msg.rear_right = joints_[BR]->GetVelocity(0);
+    joints_[RR]->SetVelocity( 0, wheel_ang_vel_.rear_right);
+    joints_[RR]->SetMaxForce( 0, torque_ );
+    js_.position[RR] = joints_[RR]->GetAngle(0).Radian();
+    js_.velocity[RR] = encoder_msg.rear_right = joints_[RR]->GetVelocity(0);
   }
   if (set_joints_[FL])
   {
     joints_[FL]->SetVelocity( 0, wheel_ang_vel_.front_left);
     joints_[FL]->SetMaxForce( 0, torque_ );
-    js_.position[3] = joints_[FR]->GetAngle(0).Radian();
-    js_.velocity[3] = encoder_msg.front_right = joints_[FR]->GetVelocity(0);
+    js_.position[FL] = joints_[FR]->GetAngle(0).Radian();
+    js_.velocity[FL] = encoder_msg.front_left = joints_[FL]->GetVelocity(0);
   }
   if (set_joints_[FR])
   {
     joints_[FR]->SetVelocity( 0, wheel_ang_vel_.front_right);
     joints_[FR]->SetMaxForce( 0, torque_ );
-    js_.position[2] = joints_[FL]->GetAngle(0).Radian();
-    js_.velocity[2] = encoder_msg.front_left = joints_[FL]->GetVelocity(0);
+    js_.position[FR] = joints_[FR]->GetAngle(0).Radian();
+    js_.velocity[FR] = encoder_msg.front_right = joints_[FR]->GetVelocity(0);
   }
 
   if (set_joints_[FA])

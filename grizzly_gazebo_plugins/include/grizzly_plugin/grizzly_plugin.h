@@ -65,8 +65,8 @@ namespace gazebo
 
       /// Parameters
       std::string node_namespace_;
-      std::string bl_joint_name_;
-      std::string br_joint_name_;
+      std::string rl_joint_name_;
+      std::string rr_joint_name_;
       std::string fl_joint_name_;
       std::string fr_joint_name_;
       std::string fa_joint_name_;
