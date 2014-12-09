@@ -61,13 +61,13 @@ void GrizzlyPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf )
     this->node_namespace_ = _sdf->GetElement("robotNamespace")->Get<std::string>() + "/";
 
 
-  bl_joint_name_ = "backLeftJoint";
-  if (_sdf->HasElement("backLeftJoint"))
-    bl_joint_name_ = _sdf->GetElement("backLeftJoint")->Get<std::string>();
+  bl_joint_name_ = "rearLeftJoint";
+  if (_sdf->HasElement("rearLeftJoint"))
+    bl_joint_name_ = _sdf->GetElement("rearLeftJoint")->Get<std::string>();
 
-  br_joint_name_ = "backRightJoint";
-  if (_sdf->HasElement("backRightJoint"))
-    br_joint_name_ = _sdf->GetElement("backRightJoint")->Get<std::string>();
+  br_joint_name_ = "rearRightJoint";
+  if (_sdf->HasElement("rearRightJoint"))
+    br_joint_name_ = _sdf->GetElement("rearRightJoint")->Get<std::string>();
 
   fl_joint_name_ = "frontLeftJoint";
   if (_sdf->HasElement("frontLeftJoint"))
