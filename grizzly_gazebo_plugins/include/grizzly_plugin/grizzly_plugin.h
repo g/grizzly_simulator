@@ -35,6 +35,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
 
 #include <nav_msgs/Odometry.h>
 #include <grizzly_msgs/Drive.h>
+#include <grizzly_msgs/eigen.h>
 #include <geometry_msgs/TwistWithCovariance.h>
 #include <geometry_msgs/PoseWithCovariance.h>
 
@@ -65,8 +66,8 @@ namespace gazebo
 
       /// Parameters
       std::string node_namespace_;
-      std::string bl_joint_name_;
-      std::string br_joint_name_;
+      std::string rl_joint_name_;
+      std::string rr_joint_name_;
       std::string fl_joint_name_;
       std::string fr_joint_name_;
       std::string fa_joint_name_;
