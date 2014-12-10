@@ -33,7 +33,13 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
 
 using namespace gazebo;
 
-enum {RL= 0, RR=1, FL=2, FR=3, FA=4};
+// enum {FL=0, FR=1, RL= 2, RR=3, FA=4};
+enum {
+  FL=grizzly_msgs::Drives::FrontLeft, 
+  FR=grizzly_msgs::Drives::FrontRight,
+  RL=grizzly_msgs::Drives::RearLeft,
+  RR=grizzly_msgs::Drives::RearRight,
+  FA=4};
 
 GrizzlyPlugin::GrizzlyPlugin()
 {
@@ -97,22 +103,22 @@ void GrizzlyPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf )
   std::string modelName = _sdf->GetParent()->Get<std::string>("name");
   gzdbg << "plugin model name: " << modelName << "\n";
 
-  js_.name.push_back( rl_joint_name_ );
-  js_.position.push_back(0);
-  js_.velocity.push_back(0);
-  js_.effort.push_back(0);
-
-  js_.name.push_back( rr_joint_name_ );
-  js_.position.push_back(0);
-  js_.velocity.push_back(0);
-  js_.effort.push_back(0);
-
   js_.name.push_back( fl_joint_name_ );
   js_.position.push_back(0);
   js_.velocity.push_back(0);
   js_.effort.push_back(0);
 
   js_.name.push_back( fr_joint_name_ );
+  js_.position.push_back(0);
+  js_.velocity.push_back(0);
+  js_.effort.push_back(0);
+
+  js_.name.push_back( rl_joint_name_ );
+  js_.position.push_back(0);
+  js_.velocity.push_back(0);
+  js_.effort.push_back(0);
+
+  js_.name.push_back( rr_joint_name_ );
   js_.position.push_back(0);
   js_.velocity.push_back(0);
   js_.effort.push_back(0);
@@ -197,7 +203,7 @@ void GrizzlyPlugin::UpdateChild()
   {
     joints_[FL]->SetVelocity( 0, wheel_ang_vel_.front_left);
     joints_[FL]->SetMaxForce( 0, torque_ );
-    js_.position[FL] = joints_[FR]->GetAngle(0).Radian();
+    js_.position[FL] = joints_[FL]->GetAngle(0).Radian();
     js_.velocity[FL] = encoder_msg.front_left = joints_[FL]->GetVelocity(0);
   }
   if (set_joints_[FR])
