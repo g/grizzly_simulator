@@ -221,7 +221,7 @@ void GrizzlyPlugin::UpdateChild()
   }
 
   // publish joint states
-  joint_state_pub_.publish( js_ );
+  // joint_state_pub_.publish( js_ );
 
   // publish encoder message
   encoder_msg.header.stamp.sec = time_now.sec;
