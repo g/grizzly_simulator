@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>grizzly_simulator</name>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
   <description>Metapackage allowing easy installation of Grizzly simulation components.</description>
 
   <maintainer email="yanma@clearpathrobotics.com">Yan Ma</maintainer>
