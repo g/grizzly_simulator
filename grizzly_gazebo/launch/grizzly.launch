@@ -37,5 +37,5 @@ robot model in Gazebo
   <include file="$(find grizzly_motion)/launch/motion.launch">
     <arg name="simulate" value="true" />
   </include>
-  <include file="$(find grizzly_navigation)/launch/ekf.launch"/>
+  <include file="$(find grizzly_navigation)/launch/control.launch"/>
 </launch>
