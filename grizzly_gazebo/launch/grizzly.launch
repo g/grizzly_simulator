@@ -31,8 +31,10 @@ robot model in Gazebo
 
 <launch>
   <arg name="description" />
+  <arg name="spawn_lidar" default="false" />
   <include file="$(find grizzly_gazebo)/launch/base_gazebo.launch">
     <arg name="description" value="$(arg description)" />
+    <arg name="spawn_lidar" value="$(arg spawn_lidar)" />
   </include>
   <include file="$(find grizzly_motion)/launch/motion.launch">
     <arg name="simulate" value="true" />

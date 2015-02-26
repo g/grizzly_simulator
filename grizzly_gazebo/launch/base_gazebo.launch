@@ -31,10 +31,11 @@ robot model in Gazebo
 
 <launch>
   <arg name="description" />
+  <arg name="spawn_lidar" default="false" />
   <param name="use_sim_time" value="true" />
 
   <!-- Send the Grizzly Robot URDF to param server -->
-  <param name="robot_description" command="$(find xacro)/xacro.py '$(arg description)'" />
+  <param name="robot_description" command="$(find xacro)/xacro.py '$(arg description)' spawn_lidar:=$(arg spawn_lidar)" />
 
   <!-- push robot_description to factory and spawn robot in gazebo -->
   <node name="spawn_robot" pkg="gazebo_ros" type="spawn_model"
