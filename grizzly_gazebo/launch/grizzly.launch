@@ -30,12 +30,38 @@ robot model in Gazebo
 -->
 
 <launch>
-  <arg name="description" />
+  <!-- Grizzly accessories which may be simulated. Pass true to enable -->
+  <arg name="front_laser" default="true" />
+  <arg name="gps" default="true" />
+
+  <!-- Starting location of robot -->
+  <arg name="x_0" default="0.0" />
+  <arg name="y_0" default="0.0" />
+
+  <!-- Send the Grizzly Robot URDF to param server -->
+  <include file="$(find grizzly_description)/launch/description.launch">
+    <arg name="accessories" value="true" />
+    <arg name="front_laser" value="$(arg front_laser)" />
+  </include>
+
+  <!--
   <include file="$(find grizzly_gazebo)/launch/base_gazebo.launch">
     <arg name="description" value="$(arg description)" />
-  </include>
+  </include>-->
+
+  <!-- Launch basic control nodes -->
   <include file="$(find grizzly_motion)/launch/motion.launch">
     <arg name="simulate" value="true" />
   </include>
-  <include file="$(find grizzly_navigation)/launch/localization.launch"/>
+  <include file="$(find grizzly_control)/launch/localization.launch"/>
+
+  <!-- Push robot_description to factory and spawn robot in gazebo -->
+  <node name="spawn_robot" pkg="gazebo_ros" type="spawn_model"
+    args="-param robot_description
+          -urdf
+          -x $(arg x_0)
+          -y $(arg y_0)
+          -z 0.2
+          -model grizzly"
+    respawn="false" output="screen" />
 </launch>
