@@ -10,7 +10,6 @@
 
   <buildtool_depend>catkin</buildtool_depend>
   <run_depend>grizzly_gazebo</run_depend>
-  <run_depend>grizzly_gazebo_plugins</run_depend>
 
   <export><metapackage/></export>
 </package>

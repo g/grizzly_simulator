@@ -2,8 +2,8 @@
 <!--
 Software License Agreement (BSD)
 
-\file      grizzly_empty_world.launch
-\authors   Paul Bovbel <pbovbel@clearpathrobotics.com, Devon Ash <dash@clearpathrobotics.com>
+\file      multi_grizzly_playpen.launch
+\authors   Paul Bovbel <pbovbel@clearpathrobotics.com
 \copyright Copyright (c) 2015, Clearpath Robotics, Inc., All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that
@@ -25,23 +25,40 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
 -->
 <launch>
 
-  <arg name="world_name" default="worlds/empty.world"/>
-
   <arg name="laser_enabled" default="true"/>
+  <arg name="ur5_enabled" default="false"/>
   <arg name="kinect_enabled" default="false"/>
 
-  <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="world_name" value="$(arg world_name)"/> <!-- world_name is wrt GAZEBO_RESOURCE_PATH environment variable -->
-    <arg name="paused" value="false"/>
-    <arg name="use_sim_time" value="true"/>
-    <arg name="gui" value="true"/>
-    <arg name="headless" value="false"/>
-    <arg name="debug" value="false"/>
+ <include file="$(find multimaster_launch)/launch/multimaster_gazebo.launch"/>
+
+  <!-- We resume the logic in empty_world.launch, changing only the name of the world to be launched -->
+  <include file="$(find grizzly_gazebo)/launch/playpen.launch" />
+
+  <include file="$(find grizzly_gazebo)/launch/spawn_grizzly.launch">
+    <arg name="laser_enabled" value="$(arg laser_enabled)"/>
+    <arg name="kinect_enabled" value="$(arg kinect_enabled)"/>
+    <arg name="robot_namespace" value="grizzly_alpha"/>
+    <arg name="multimaster" value="true"/>
   </include>
 
   <include file="$(find grizzly_gazebo)/launch/spawn_grizzly.launch">
     <arg name="laser_enabled" value="$(arg laser_enabled)"/>
     <arg name="kinect_enabled" value="$(arg kinect_enabled)"/>
+    <arg name="robot_namespace" value="grizzly_beta"/>
+    <arg name="multimaster" value="true"/>
+    <arg name="x" value="1.0"/>
+    <arg name="y" value="3.0"/>
+    <arg name="yaw" value="30.0"/>
+  </include>
+
+  <include file="$(find grizzly_gazebo)/launch/spawn_grizzly.launch">
+    <arg name="laser_enabled" value="$(arg laser_enabled)"/>
+    <arg name="kinect_enabled" value="$(arg kinect_enabled)"/>
+    <arg name="robot_namespace" value="grizzly_gamma"/>
+    <arg name="multimaster" value="true"/>
+    <arg name="x" value="-3.0"/>
+    <arg name="y" value="-1.0"/>
+    <arg name="yaw" value="45.0"/>
   </include>
 
 </launch>
