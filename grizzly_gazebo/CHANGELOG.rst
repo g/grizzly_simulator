@@ -2,6 +2,12 @@
 Changelog for package grizzly_gazebo
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Upgrading simulation to kinetic
+* Rename control.launch to localization.launch
+* Contributors: Mohamed Elshatshat, Shokoofeh Pourmehr
+
 0.2.0 (2014-12-18)
 ------------------
 * replace robot_pose_ekf with robot_localization
