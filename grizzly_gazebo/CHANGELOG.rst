@@ -2,8 +2,8 @@
 Changelog for package grizzly_gazebo
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.0 (2018-06-07)
+------------------
 * Upgrading simulation to kinetic
 * Rename control.launch to localization.launch
 * Contributors: Mohamed Elshatshat, Shokoofeh Pourmehr

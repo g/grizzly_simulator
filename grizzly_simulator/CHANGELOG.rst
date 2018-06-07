@@ -2,8 +2,8 @@
 Changelog for package grizzly_simulator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.0 (2018-06-07)
+------------------
 * Upgrading simulation to kinetic
 * Contributors: Mohamed Elshatshat
 
