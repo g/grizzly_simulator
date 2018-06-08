@@ -4,7 +4,7 @@
   <version>0.3.0</version>
   <description>Metapackage allowing easy installation of Grizzly simulation components.</description>
 
-  <maintainer email="yanma@clearpathrobotics.com">Yan Ma</maintainer>
+  <maintainer email="tbaltovski@clearpathrobotics.com">Tony Baltovski</maintainer>
 
   <license>BSD</license>
 
