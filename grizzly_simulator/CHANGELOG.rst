@@ -2,8 +2,8 @@
 Changelog for package grizzly_simulator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.1 (2018-06-08)
+------------------
 * Removed un-used args and multimaster.  Updated maintainer.
 * Contributors: Tony Baltovski
 
